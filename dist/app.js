@@ -70,7 +70,16 @@ async function compileAgreement(data){
     await new Promise(r=>setTimeout(r,430));
     row.classList.remove("active"); row.classList.add("done"); row.querySelector("b").textContent="verified";
   }
-  renderResult(profiles[activeProfile]);
+  let compiled = profiles[activeProfile];
+  try {
+    const response = await fetch('/api/policies/evaluate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:$('#payer').value,counterparty:$('#recipient').value,amount_usd:Number($('#amount').value),intent:'service_payment',demo_profile:activeProfile})});
+    const api = await response.json();
+    if(response.ok){
+      const p=api.policy;
+      compiled={id:`PACT #${api.policy_id.slice(-7).toUpperCase()}`,badge:api.decision==='ALLOW'?'Standard protection':'Enhanced protection',template:p.template==='protected_stream'?'Protected payment stream':'Milestone escrow',copy:p.template==='protected_stream'?'30% kickoff, then continuous release':'Full funding with controlled releases',terms:p.template==='protected_stream'?[["Escrow funding",`${p.escrow_percentage}%`],["Kickoff release",`${p.upfront_percentage}%`],["Remaining payment",`${p.stream_days}-day stream`],["Review period",`${p.review_period_hours} hours`]]:[["Escrow funding",`${p.escrow_percentage}%`],["Kickoff release",`${p.upfront_percentage}%`],["Milestones",p.milestone_percentages.map(x=>`${x}%`).join(' · ')],["Review period",`${p.review_period_hours} hours`]],evidence:api.reasons.map(r=>[r.code.split('_').map(x=>x[0]+x.slice(1).toLowerCase()).join(' '),r.observation])};
+    }
+  } catch (_) {}
+  renderResult(compiled);
   $("#loadingOutput").classList.add("hidden");
   $("#resultOutput").classList.remove("hidden");
   return {decision:"ALLOW_WITH_SAFEGUARDS",agreement_id:currentResult.id.replace("PACT #",""),template:currentResult.template,protection:currentResult.badge};
@@ -103,7 +112,12 @@ $$('.modal-action').forEach(button=>button.addEventListener("click",()=>{
   if(next==="proof") $("#proofHash").textContent=`0x${Math.random().toString(16).slice(2,6)}…${Math.random().toString(16).slice(2,6)}`;
 }));
 
-$("#walletButton").addEventListener("click",()=>{ $("#walletButton").innerHTML="<span></span> 0x71A9…2F18"; showToast("Demo wallet connected"); });
+$("#walletButton").addEventListener("click",async()=>{
+  if(window.ethereum){
+    try{const accounts=await window.ethereum.request({method:'eth_requestAccounts'});const a=accounts[0];$("#payer").value=a;$("#walletButton").innerHTML=`<span></span> ${a.slice(0,6)}…${a.slice(-4)}`;showToast("Wallet connected");return}catch(_){showToast("Wallet connection cancelled");return}
+  }
+  $("#walletButton").innerHTML="<span></span> 0x71A9…2F18";showToast("No wallet extension found — demo wallet loaded");
+});
 $$('[data-scroll]').forEach(btn=>btn.addEventListener("click",()=>document.getElementById(btn.dataset.scroll).scrollIntoView()));
 
 function registerWebMCP(){
