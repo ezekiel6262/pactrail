@@ -35,17 +35,17 @@ function showToast(message){ const toast=$("#toast"); toast.textContent=message;
 function setProfile(profile){
   activeProfile = profile;
   if(profile === "established"){
-    $("#recipient").value="0x8B14...40C2";
-    $("#sampleToggle").textContent="Use thin-history sample";
+    $("#recipient").value="0x39d52da6beec991f075eebe577474fd105c5caec";
+    $("#sampleToggle").textContent="Use alternate public sample";
   }else{
-    $("#recipient").value="0x3C42...91E7";
-    $("#sampleToggle").textContent="Use established sample";
+    $("#recipient").value="0x28c6c06298d514db089934071355e5743bf21d60";
+    $("#sampleToggle").textContent="Use second public sample";
   }
 }
 
 $("#sampleToggle").addEventListener("click",()=>{
   setProfile(activeProfile === "thin" ? "established" : "thin");
-  showToast(activeProfile === "thin" ? "Thin-history sample loaded" : "Established sample loaded");
+  showToast("Public wallet sample loaded");
 });
 
 function renderResult(result){
@@ -70,15 +70,23 @@ async function compileAgreement(data){
     await new Promise(r=>setTimeout(r,430));
     row.classList.remove("active"); row.classList.add("done"); row.querySelector("b").textContent="verified";
   }
-  let compiled = profiles[activeProfile];
+  let compiled = null;
   try {
-    const response = await fetch('/api/policies/evaluate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:$('#payer').value,counterparty:$('#recipient').value,amount_usd:Number($('#amount').value),intent:'service_payment',demo_profile:activeProfile})});
+    const response = await fetch('/api/policies/evaluate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:$('#payer').value,counterparty:$('#recipient').value,amount_usd:Number($('#amount').value),intent:'service_payment',chain:$('#network').value.toLowerCase()})});
     const api = await response.json();
+    if(!response.ok) throw new Error(api.message || api.error || 'Live policy evaluation failed');
     if(response.ok){
       const p=api.policy;
       compiled={id:`PACT #${api.policy_id.slice(-7).toUpperCase()}`,badge:api.decision==='ALLOW'?'Standard protection':'Enhanced protection',template:p.template==='protected_stream'?'Protected payment stream':'Milestone escrow',copy:p.template==='protected_stream'?'30% kickoff, then continuous release':'Full funding with controlled releases',terms:p.template==='protected_stream'?[["Escrow funding",`${p.escrow_percentage}%`],["Kickoff release",`${p.upfront_percentage}%`],["Remaining payment",`${p.stream_days}-day stream`],["Review period",`${p.review_period_hours} hours`]]:[["Escrow funding",`${p.escrow_percentage}%`],["Kickoff release",`${p.upfront_percentage}%`],["Milestones",p.milestone_percentages.map(x=>`${x}%`).join(' · ')],["Review period",`${p.review_period_hours} hours`]],evidence:api.reasons.map(r=>[r.code.split('_').map(x=>x[0]+x.slice(1).toLowerCase()).join(' '),r.observation])};
     }
-  } catch (_) {}
+  } catch (error) {
+    $("#loadingOutput").classList.add("hidden");
+    $("#emptyOutput").classList.remove("hidden");
+    $("#emptyOutput h2").textContent="Live evaluation unavailable";
+    $("#emptyOutput>p:not(.kicker)").textContent=error.message;
+    showToast(error.message);
+    return {decision:"ERROR",message:error.message};
+  }
   renderResult(compiled);
   $("#loadingOutput").classList.add("hidden");
   $("#resultOutput").classList.remove("hidden");
