@@ -11,7 +11,7 @@ function showToast(message){const toast=$("#toast");toast.textContent=message;to
 $("#sampleToggle").addEventListener("click",()=>{
   activeSample=activeSample==="thin"?"established":"thin";
   $("#recipient").value=samples[activeSample];
-  $("#sampleToggle").textContent=activeSample==="thin"?"Use contrasting sample":"Use alternate public sample";
+  $("#sampleToggle").textContent=activeSample==="thin"?"Load sample wallets":"Load alternate wallets";
   showToast("Public wallet sample loaded");
 });
 

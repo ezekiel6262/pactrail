@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d0f0e'/%3E%3Cpath d='M15 22h15c8 0 13 4 13 10s-5 10-13 10H15V22Zm9 7v6h7c2 0 4-1 4-3s-2-3-4-3h-7Z' fill='%23c8ff53'/%3E%3Cpath d='M40 22h9v20h-9z' fill='%23c8ff53'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../refinements.css" />
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +18,7 @@
       <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
       <span>PACTRAIL</span>
     </a>
-    <div class="topbar-center"><span class="live-dot"></span>Agreement compiler online</div>
+    <div class="topbar-center"><span class="live-dot"></span>Policy engine online</div>
     <nav aria-label="Main navigation">
       <button class="nav-link" data-scroll="how">How it works</button>
       <button class="nav-link" data-scroll="developers">Developers</button>
@@ -40,13 +41,13 @@
           <div class="panel-number">01</div>
           <div class="panel-heading">
             <div><p class="kicker">Proposed transaction</p><h2 id="deal-heading">Define the pact</h2></div>
-            <button class="sample-toggle" id="sampleToggle">Use contrasting sample</button>
+            <button class="sample-toggle" id="sampleToggle">Load sample wallets</button>
           </div>
 
           <form id="dealForm">
             <label class="field full">
               <span>What is this agreement for?</span>
-              <textarea id="purpose" rows="3">Smart contract audit and remediation review</textarea>
+              <textarea id="purpose" rows="1">Smart contract audit and remediation review</textarea>
             </label>
             <div class="form-grid">
               <label class="field">
@@ -63,11 +64,11 @@
               </label>
               <label class="field">
                 <span>Network</span>
-                <select id="network"><option>Base</option><option>Ethereum</option><option>Arbitrum</option></select>
+                <select id="network"><option value="base">Base Sepolia</option><option value="ethereum">Ethereum analysis</option><option value="arbitrum">Arbitrum analysis</option></select>
               </label>
             </div>
             <div class="form-footer">
-              <p><span class="shield-icon">◆</span> Analysis requires live Nansen data. No transaction is sent until terms are accepted.</p>
+              <p class="nansen-cue"><span class="shield-icon">◆</span><b>Nansen-backed live policy</b><small>No transaction is sent until you approve the terms.</small></p>
               <button class="primary-button" type="submit"><span>Compile agreement</span><b>↗</b></button>
             </div>
           </form>
@@ -109,7 +110,7 @@
               <summary><span>Why these terms?</span><small id="signalCount">4 behavioral signals</small></summary>
               <div id="evidenceList"></div>
             </details>
-            <button class="primary-button deploy-button" id="deployButton"><span>Review execution readiness</span><b>↗</b></button>
+            <button class="primary-button deploy-button" id="deployButton"><span>Continue to escrow</span><b>↗</b></button>
           </div>
         </section>
       </div>

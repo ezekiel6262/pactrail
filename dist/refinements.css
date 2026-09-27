@@ -1,0 +1,18 @@
+.workspace{padding-top:24px;padding-bottom:58px}
+.workspace-heading{grid-template-columns:1.25fr .55fr;gap:48px;margin-bottom:18px}
+.workspace-heading h1{font-size:clamp(2.8rem,4.8vw,5rem);line-height:.9;max-width:720px}
+.workspace-heading .eyebrow{margin-bottom:9px}
+.intro{font-size:.98rem;max-width:390px}
+.deal-panel,.output-panel{min-height:520px;padding:24px 30px}
+.panel-heading{margin-bottom:16px}
+.field textarea{min-height:52px;padding-top:11px;padding-bottom:11px}
+.field textarea,.field input,.field select{padding-top:11px;padding-bottom:11px}
+.form-grid{gap:13px 16px;margin-top:13px}
+.form-footer{margin-top:16px}
+.nansen-cue{display:grid!important;grid-template-columns:14px 1fr;column-gap:3px;max-width:285px!important;align-items:center}
+.nansen-cue .shield-icon{grid-row:1 / span 2}
+.nansen-cue b{font-family:"DM Mono";font-size:.65rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+.nansen-cue small{font-size:.68rem;color:var(--muted)}
+.sample-toggle{white-space:nowrap}
+@media(max-width:900px){.workspace{padding-top:28px}.workspace-heading{gap:18px;margin-bottom:24px}.workspace-heading h1{font-size:clamp(3.2rem,10vw,5rem)}.deal-panel,.output-panel{min-height:auto}}
+@media(max-width:580px){.workspace-heading h1{font-size:3.15rem}.intro{font-size:.9rem}.deal-panel,.output-panel{padding:26px 20px}.panel-heading{gap:16px}.sample-toggle{white-space:normal;text-align:right}.nansen-cue{max-width:none!important}}
