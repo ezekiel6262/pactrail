@@ -52,7 +52,9 @@ Raw Nansen data should not be proxied to customers. Pactrail returns materially 
 
 ## Safety
 
-The current escrow experience is a simulation. `contracts/PactrailEscrow.sol` is a reference implementation and has not been audited or deployed. Do not use it with real funds.
+The Deal Studio can deploy, create, approve and fund a real Pactrail escrow on Base Sepolia using test USDC. The factory is deployed on demand by the connected payer wallet and its address is retained locally. The contracts are covered by automated lifecycle tests but have not been independently audited; do not use them with mainnet funds.
+
+Run `npm test` to compile the contracts and exercise funding, milestone release, dispute refund, authorization and double-release protection.
 
 ## Deployment
 

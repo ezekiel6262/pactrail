@@ -1,0 +1,16 @@
+{
+  "name": "pactrail",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile:contracts": "node scripts/compile-contracts.js",
+    "test:contracts": "node --test test/escrow.test.js",
+    "test": "npm run compile:contracts && npm run test:contracts"
+  },
+  "devDependencies": {
+    "ethers": "6.15.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.30"
+  }
+}

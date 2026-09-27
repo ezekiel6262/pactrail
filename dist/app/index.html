@@ -152,14 +152,19 @@
     <div class="dialog-step" data-step="fund">
       <p class="eyebrow">Execution readiness</p>
       <h2>Policy receipt is ready</h2>
-      <p>The bilateral Nansen evaluation is complete and saved in this browser. Onchain funding remains disabled until the escrow contract is audited and deployed; Pactrail will never fabricate a transaction receipt.</p>
+      <p>The bilateral Nansen evaluation is complete and saved in this browser. Testnet execution creates and funds a real policy-bound escrow; Pactrail displays a settlement only after the wallet transaction is confirmed onchain.</p>
       <div class="escrow-summary"><span>Agreement</span><b id="modalAgreement">#PR-1042</b><span>Network</span><b>Base Sepolia</b><span>Deposit</span><b id="modalAmount">10,000 USDC</b></div>
       <div class="proof-card"><span>LIVE POLICY RECEIPT</span><b id="policyReceiptId">Pending</b><p>Bilateral Nansen evidence · locally retained</p><small>No onchain transaction has been submitted.</small></div>
+      <label class="field"><span>Independent resolver wallet</span><input id="resolverAddress" placeholder="0x…" spellcheck="false"></label>
+      <p id="executionStatus">Base Sepolia beta. Your wallet will request separate confirmations to deploy the factory when needed, create the escrow, approve the exact USDC amount and fund it.</p>
+      <button class="primary-button" id="executeEscrow"><span>Create & fund on Base Sepolia</span><b>↗</b></button>
       <button class="primary-button" id="downloadReceipt"><span>Download policy receipt</span><b>↓</b></button>
     </div>
   </dialog>
 
   <div class="toast" id="toast" role="status"></div>
+  <script src="../vendor/ethers.umd.min.js"></script>
+  <script src="../contracts.js"></script>
   <script src="../app.js"></script>
 </body>
 </html>

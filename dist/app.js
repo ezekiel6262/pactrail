@@ -84,6 +84,72 @@ $("#downloadReceipt").addEventListener("click",()=>{
   const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`${currentPolicy.policy_id}.json`;link.click();URL.revokeObjectURL(link.href);
 });
 
+const BASE_SEPOLIA={chainId:"0x14a34",chainName:"Base Sepolia",nativeCurrency:{name:"ETH",symbol:"ETH",decimals:18},rpcUrls:["https://sepolia.base.org"],blockExplorerUrls:["https://sepolia.basescan.org"]};
+const BASE_SEPOLIA_USDC="0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const ERC20_ABI=["function approve(address spender,uint256 amount) returns (bool)"];
+
+async function switchToBaseSepolia(){
+  try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:BASE_SEPOLIA.chainId}]})}
+  catch(error){if(error.code!==4902)throw error;await window.ethereum.request({method:"wallet_addEthereumChain",params:[BASE_SEPOLIA]})}
+}
+
+function milestoneAmounts(amount,policy){
+  const total=ethers.parseUnits(String(amount),6);
+  const percentages=policy.template==="milestone_escrow"?[policy.upfront_percentage,...policy.milestone_percentages]:[policy.upfront_percentage,100-policy.upfront_percentage];
+  const values=[];let allocated=0n;
+  percentages.forEach((percentage,index)=>{const value=index===percentages.length-1?total-allocated:total*BigInt(percentage)/100n;values.push(value);allocated+=value});
+  return values;
+}
+
+$("#executeEscrow").addEventListener("click",async()=>{
+  const status=$("#executionStatus");
+  try{
+    if(!currentPolicy)throw new Error("Compile a live policy first");
+    if(!window.ethereum)throw new Error("Install an EVM wallet extension to execute escrow");
+    const resolver=$("#resolverAddress").value.trim();
+    if(!ethers.isAddress(resolver))throw new Error("Enter a valid independent resolver address");
+    await switchToBaseSepolia();
+    const provider=new ethers.BrowserProvider(window.ethereum);
+    const signer=await provider.getSigner();
+    const payer=await signer.getAddress();
+    if(resolver.toLowerCase()===payer.toLowerCase()||resolver.toLowerCase()===$("#recipient").value.toLowerCase())throw new Error("Resolver must differ from both parties");
+    status.textContent="Checking escrow factory…";
+    let factoryAddress=localStorage.getItem("pactrail.baseSepoliaFactory");
+    if(factoryAddress){const code=await provider.getCode(factoryAddress);if(code==="0x")factoryAddress=null}
+    if(!factoryAddress){
+      status.textContent="Confirm factory deployment in your wallet…";
+      const deployment=new ethers.ContractFactory(PACTRAIL_CONTRACTS.factory.abi,PACTRAIL_CONTRACTS.factory.bytecode,signer);
+      const factory=await deployment.deploy();
+      await factory.waitForDeployment();
+      factoryAddress=await factory.getAddress();
+      localStorage.setItem("pactrail.baseSepoliaFactory",factoryAddress);
+    }
+    const factory=new ethers.Contract(factoryAddress,PACTRAIL_CONTRACTS.factory.abi,signer);
+    const amounts=milestoneAmounts(Number($("#amount").value),currentPolicy.policy);
+    const policyHash=ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(currentPolicy)));
+    const expiresAt=Math.floor(Date.now()/1000)+30*24*60*60;
+    status.textContent="Confirm escrow creation in your wallet…";
+    const createTx=await factory.createEscrow($("#recipient").value,resolver,BASE_SEPOLIA_USDC,policyHash,amounts,expiresAt);
+    const createReceipt=await createTx.wait();
+    const created=createReceipt.logs.map((log)=>{try{return factory.interface.parseLog(log)}catch{return null}}).find((event)=>event?.name==="EscrowCreated");
+    if(!created)throw new Error("Escrow creation event was not found");
+    const escrowAddress=created.args.escrow;
+    const total=amounts.reduce((sum,value)=>sum+value,0n);
+    status.textContent="Confirm exact USDC approval in your wallet…";
+    const token=new ethers.Contract(BASE_SEPOLIA_USDC,ERC20_ABI,signer);
+    await (await token.approve(escrowAddress,total)).wait();
+    status.textContent="Confirm escrow funding in your wallet…";
+    const escrow=new ethers.Contract(escrowAddress,PACTRAIL_CONTRACTS.escrow.abi,signer);
+    const fundTx=await escrow.fund();
+    const fundReceipt=await fundTx.wait();
+    const execution={network:"base-sepolia",factory_address:factoryAddress,escrow_address:escrowAddress,create_tx:createReceipt.hash,fund_tx:fundReceipt.hash,asset:BASE_SEPOLIA_USDC,status:"funded",updated_at:new Date().toISOString()};
+    currentPolicy.execution=execution;persistPolicy(currentPolicy);
+    status.innerHTML=`Escrow funded onchain. <a href="https://sepolia.basescan.org/address/${escrowAddress}" target="_blank" rel="noreferrer">View verified activity ↗</a>`;
+    $("#executeEscrow").disabled=true;
+    $("#executeEscrow span").textContent="Escrow funded";
+  }catch(error){status.textContent=error.shortMessage||error.message||"Escrow execution failed"}
+});
+
 $("#walletButton").addEventListener("click",async()=>{
   if(!window.ethereum){showToast("Install an EVM wallet extension to connect");return}
   try{const accounts=await window.ethereum.request({method:"eth_requestAccounts"});const address=accounts[0];$("#payer").value=address;$("#walletButton").innerHTML=`<span></span> ${address.slice(0,6)}…${address.slice(-4)}`;showToast("Wallet connected")}catch{showToast("Wallet connection cancelled")}
